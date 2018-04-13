@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Interview sample</string>
+
+    <string name="common_details">DETAILS</string>
+    <string name="common_share">SHARE</string>
+    <string name="toast_details">Details: </string>
+    <string name="message_share">Hello: </string>
+    <string name="menu_plus">Add an item</string>
+    <string name="menu_minus">Remove an item</string>
+    <string name="send_to">Send to</string>
+
+</resources>
