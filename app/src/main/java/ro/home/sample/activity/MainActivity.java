@@ -1,29 +1,32 @@
 package ro.home.sample.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.widget.Toolbar;
+import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
 import ro.home.sample.R;
-import ro.home.sample.controller.VerticalSpaceItemDecoration;
-import ro.home.sample.entity.Movie;
-import ro.home.sample.services.MovieAdapterInterface;
-import ro.home.sample.services.MyAdapter;
+import ro.home.sample.controller.AlbumsAdapter;
+import ro.home.sample.controller.AlbumsAdapterInterface;
+import ro.home.sample.controller.GridSpacingDecoration;
+import ro.home.sample.entity.Album;
 import ro.home.sample.utils.LoremIpsum;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapterInterface {
-    private ArrayList<Movie> moviesList;
+public class MainActivity extends AppCompatActivity implements AlbumsAdapterInterface {
+
     private RecyclerView recyclerView;
-    private MyAdapter moviesAdapter;
+    private AlbumsAdapter mAdapter;
+    private ArrayList<Album> albumList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,66 +36,71 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterInter
         this.initialize();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_add:
-                this.onMenuAddPress();
-                return true;
-
-            case R.id.action_remove:
-                this.onMenuRemovePress();
-                return true;
-        }
-        return false;
-    }
-
     private void initialize() {
         try {
-            recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
 
-            moviesList = LoremIpsum.getMoviesList(this);
-            moviesAdapter = new MyAdapter(moviesList, this);
-            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+            initCollapseBar();
+
+            recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+            albumList = LoremIpsum.getAlbumList(this);
+            mAdapter = new AlbumsAdapter(albumList, this, this);
+
+            RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 2);
             recyclerView.setLayoutManager(mLayoutManager);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setAdapter(moviesAdapter);
-            moviesAdapter.notifyDataSetChanged();
+            recyclerView.addItemDecoration(new GridSpacingDecoration(this, 2, 10, true));
+            recyclerView.setAdapter(mAdapter);
+
+            Glide.with(this).load(R.drawable.cover)
+                    .into((ImageView) findViewById(R.id.backdrop));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void onMenuAddPress() {
-        Movie movie = LoremIpsum.getMovieSample(this);
-        moviesList.add(movie);
-        moviesAdapter.notifyDataSetChanged();
-    }
 
-    private void onMenuRemovePress() {
-        if (moviesList != null && moviesList.size() > 0) {
-            moviesList.remove(0);
-            moviesAdapter.notifyDataSetChanged();
-        }
+    /**
+     * Initializing collapsing toolbar
+     * Will show and hide the toolbar title on scroll
+     */
+    private void initCollapseBar() {
+        final CollapsingToolbarLayout collapsingToolbarLayout =
+                (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
+        collapsingToolbarLayout.setTitle(" ");
+        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
+        appBarLayout.setExpanded(true);
+
+        // hiding & showing the title when toolbar expanded & collapsed
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            boolean isShow = false;
+            int scrollRange = -1;
+
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.getTotalScrollRange();
+                }
+                if (scrollRange + verticalOffset == 0) {
+                    collapsingToolbarLayout.setTitle(getString(R.string.app_name));
+                    isShow = true;
+                } else if (isShow) {
+                    collapsingToolbarLayout.setTitle(" ");
+                    isShow = false;
+                }
+            }
+        });
     }
 
     @Override
-    public void onDetailsPress(Movie movie) {
-        Toast.makeText(this, getResources().getString(R.string.toast_details).concat(movie.getTitle()), Toast.LENGTH_SHORT).show();
+    public void onAddFavouritePress(Album album) {
+        Toast.makeText(this, "Add to favourites", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onSharePress(Movie movie) {
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.message_share).concat(movie.getTitle()));
-        sendIntent.setType("text/plain");
-        startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.send_to)));
+    public void onPlayNextPress(Album album) {
+        Toast.makeText(this, "Play next", Toast.LENGTH_SHORT).show();
+
     }
 }
