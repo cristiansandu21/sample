@@ -3,23 +3,27 @@ package ro.home.sample.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import ro.home.sample.R;
+import ro.home.sample.controller.VerticalSpaceItemDecoration;
 import ro.home.sample.entity.Movie;
-import ro.home.sample.services.MovieAdapter;
 import ro.home.sample.services.MovieAdapterInterface;
+import ro.home.sample.services.MyAdapter;
 import ro.home.sample.utils.LoremIpsum;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapterInterface {
-    private ArrayList<Movie> movieList;
-    private ListView listViewMovies;
-    private MovieAdapter movieAdapter;
+    private ArrayList<Movie> moviesList;
+    private RecyclerView recyclerView;
+    private MyAdapter moviesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +55,15 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterInter
 
     private void initialize() {
         try {
-            movieList = LoremIpsum.getMoviesList(this);
-            movieAdapter = new MovieAdapter(this, movieList, this);
-            listViewMovies = (ListView) findViewById(R.id.list_view_movies);
-            listViewMovies.setAdapter(movieAdapter);
+            recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+            moviesList = LoremIpsum.getMoviesList(this);
+            moviesAdapter = new MyAdapter(moviesList, this);
+            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+            recyclerView.setLayoutManager(mLayoutManager);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(moviesAdapter);
+            moviesAdapter.notifyDataSetChanged();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -62,14 +71,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterInter
 
     private void onMenuAddPress() {
         Movie movie = LoremIpsum.getMovieSample(this);
-        movieList.add(movie);
-        movieAdapter.notifyDataSetChanged();
+        moviesList.add(movie);
+        moviesAdapter.notifyDataSetChanged();
     }
 
     private void onMenuRemovePress() {
-        if (movieList != null && movieList.size() > 0) {
-            movieList.remove(0);
-            movieAdapter.notifyDataSetChanged();
+        if (moviesList != null && moviesList.size() > 0) {
+            moviesList.remove(0);
+            moviesAdapter.notifyDataSetChanged();
         }
     }
 
